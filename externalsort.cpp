@@ -1,6 +1,7 @@
 #include "externalsort.h"
 
-#define DEBUG
+// #define DEBUG
+#define MEM_SIZE 4096
 
 using namespace std;
 
@@ -21,7 +22,7 @@ int main(int argc, char* argv[])
 	}
 
 	int inputFile, outputFile;
-    const int memSize = 16;	// TODO: Make this a #define
+    //const int memSize = 4096;	// TODO: Make this a #define
 
     // Open input file
 	if ((inputFile = open(argv[2], O_RDONLY, S_IRUSR | S_IWUSR)) < 0)
@@ -43,6 +44,13 @@ int main(int argc, char* argv[])
 	cout << "input file size is " << fileSize << " bytes." << endl;
 	#endif
 
+	// restore input file offset
+	if (lseek(inputFile, 0, SEEK_SET) < 0)
+	{
+		cerr << "error moving offset for output file: " << strerror(errno) << endl;
+		return -1;
+	}
+
 	// prevent execution if file size is not divisible by 8
 	assert((fileSize % sizeof(uint64_t)) == 0);
 
@@ -60,7 +68,7 @@ int main(int argc, char* argv[])
         return -1;
 	}
 
-    int ret = externalSort(inputFile, outputFile, memSize, k);
+    int ret = externalSort(inputFile, outputFile, MEM_SIZE, k);
 
     if (lseek(outputFile, 0, SEEK_SET) < 0)
     {
@@ -81,7 +89,8 @@ int main(int argc, char* argv[])
 
 int externalSort(int inputFile, int outputFile, uint64_t memSize, unsigned k)
 {
-	// TODO: Add assertions for file size and memSize
+	// Make sure memory can be evenly divided by k
+	assert(memSize > k && (memSize % k) == 0);
 
 	int runFiles[k];		// Pointers to temp run files
     int ret;				// Stores return value of read/write operations
@@ -136,7 +145,7 @@ int externalSort(int inputFile, int outputFile, uint64_t memSize, unsigned k)
         #endif
     	
         runCount++;
-    }
+    } // end of run sorting while loop
 
     // Check ret for errors while reading
     if (ret < 0)    // Error when reading
@@ -146,7 +155,11 @@ int externalSort(int inputFile, int outputFile, uint64_t memSize, unsigned k)
     }
 
 	// EOF reached. All blocks read and sorted into runs.
-	
+	if (runCount == 0)
+	{
+		cout << "no data read from file. possible error." << endl;
+		return -1;
+	}
 
     // Merge sort files
 	const unsigned partSize = memSize / k;	// partition size of arr for loading runs
