@@ -9,6 +9,8 @@
 #include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <assert.h>
 
-void externalSort(int fdInput, uint64_t size, int fdOutput, uint64_t memSize);
-const char* getFileName(unsigned mRunCount, unsigned mK);
+int externalSort(int fdInput, int fdOutput, uint64_t memSize, unsigned k);
+const char* getFileName(unsigned runCount, unsigned k);
+int testExternalSort(int fileToTest);
