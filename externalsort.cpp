@@ -131,7 +131,7 @@ int externalSort(int inputFile, int outputFile, uint64_t memSize, unsigned k)
 
         // Write sorted run to file
         if (pwrite(runFiles[(runCount % k)], arr, sizeof(uint64_t) * arrCount, 
-        	sizeof(uint64_t) * memSize * (runCount / 2)) < 0)
+        	sizeof(uint64_t) * memSize * (runCount / k)) < 0)
         {
             cout << "error writing to " << "runOutput" << (runCount % k) << "': " << strerror(errno) << endl;
             return -1;
